@@ -388,11 +388,3 @@ void mallOwner()
     }
 }
 
-
-/* Main */
-int main()
-{
-    mallOwner();
-
-    return 0;
-}
