@@ -373,4 +373,3 @@ void restaurantOwner()
         }
     }
 }
-
