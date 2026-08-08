@@ -373,10 +373,3 @@ void restaurantOwner()
         }
     }
 }
-
-int main()
-{
-    restaurantOwner();
-
-    return 0;
-}
