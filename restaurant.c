@@ -477,4 +477,20 @@ void customerPanel(void)
 
         if (preChoice == 1) { registerCustomer(); continue; }
 
-       
+        /* Login */
+        printf("\n+======================================================+\n");
+        printf("|                   CUSTOMER LOGIN                     |\n");
+        printf("+======================================================+\n");
+
+        inputString(userGmail,    100, "Enter your Gmail    : ");
+        inputString(userPassword, 100, "Enter your Password : ");
+
+        if (!checkGlobalUser(userGmail, userPassword))
+        {
+            printf("\nInvalid Gmail or Password! Access Denied.\n");
+            continue;
+        }
+        break;
+    }
+
+    printf("\nLogin Successful! Welcome Customer.\n");
