@@ -494,3 +494,197 @@ void customerPanel(void)
     }
 
     printf("\nLogin Successful! Welcome Customer.\n");
+
+    int choice;
+    while (1)
+    {
+        printf("\n+======================================================+\n");
+        printf("|                   CUSTOMER PANEL                     |\n");
+        printf("+======================================================+\n");
+        printf("|  1. View All Restaurants                             |\n");
+        printf("|  2. Rate a Restaurant                                |\n");
+        printf("|  3. Give Feedback                                    |\n");
+        printf("|  4. Logout                                           |\n");
+        printf("+------------------------------------------------------+\n");
+
+        choice = readInt("Enter Choice: ", 1, 4);
+
+        switch (choice)
+        {
+            case 1:
+                viewRestaurant();
+                break;
+
+            case 2:
+            {
+                char rName[100];
+                struct Restaurant r;
+                FILE *file, *temp;
+                int found = 0;
+
+                inputString(rName, 100, "Enter Restaurant Name to rate: ");
+
+                file = fopen(FILE_NAME, "r");
+                if (!file) { printf("\nNo restaurant data found.\n"); break; }
+
+                temp = fopen(TEMP_FILE, "w");
+                if (!temp) { fclose(file); printf("\nTemp file error.\n"); break; }
+
+                while (fscanf(file,
+                              "%99[^|]|%99[^|]|%99[^|]|%99[^|]|%99[^|]|"
+                              "%f|%d|%f|%d|%f|%d\n",
+                              r.name, r.location, r.owner, r.gmail, r.password,
+                              &r.waiter_rating, &r.waiter_rating_count,
+                              &r.food_rating,   &r.food_rating_count,
+                              &r.env_rating,    &r.env_rating_count) == 11)
+                {
+                    if (strcasecmp(rName, r.name) == 0 && !found)
+                    {
+                        found = 1;
+                        printf("\nRestaurant found! Enter ratings (1-5 stars).\n");
+
+                        int wR = readInt("Waiter Behavior Rating : ", 1, 5);
+                        int fR = readInt("Food Quality Rating    : ", 1, 5);
+                        int eR = readInt("Environment Rating     : ", 1, 5);
+
+                        r.waiter_rating =
+                            (r.waiter_rating * r.waiter_rating_count + wR)
+                            / (float)(r.waiter_rating_count + 1);
+                        r.waiter_rating_count++;
+
+                        r.food_rating =
+                            (r.food_rating * r.food_rating_count + fR)
+                            / (float)(r.food_rating_count + 1);
+                        r.food_rating_count++;
+
+                        r.env_rating =
+                            (r.env_rating * r.env_rating_count + eR)
+                            / (float)(r.env_rating_count + 1);
+                        r.env_rating_count++;
+
+                        printf("\nThank you! Ratings updated successfully.\n");
+                    }
+
+                    fprintf(temp, "%s|%s|%s|%s|%s|%.2f|%d|%.2f|%d|%.2f|%d\n",
+                            r.name, r.location, r.owner, r.gmail, r.password,
+                            r.waiter_rating, r.waiter_rating_count,
+                            r.food_rating,   r.food_rating_count,
+                            r.env_rating,    r.env_rating_count);
+                }
+
+                fclose(file);
+                fclose(temp);
+
+                if (found) { remove(FILE_NAME); rename(TEMP_FILE, FILE_NAME); }
+                else       { remove(TEMP_FILE); printf("\nRestaurant '%s' not found!\n", rName); }
+                break;
+            }
+
+            case 3:
+            {
+                char rName[100], feedback[200];
+                struct Restaurant r;
+                int found = 0;
+                FILE *file;
+
+                inputString(rName, 100, "Enter Restaurant Name for feedback: ");
+
+                file = fopen(FILE_NAME, "r");
+                if (file)
+                {
+                    while (fscanf(file,
+                                  "%99[^|]|%99[^|]|%99[^|]|%99[^|]|%99[^|]|"
+                                  "%f|%d|%f|%d|%f|%d\n",
+                                  r.name, r.location, r.owner, r.gmail, r.password,
+                                  &r.waiter_rating, &r.waiter_rating_count,
+                                  &r.food_rating,   &r.food_rating_count,
+                                  &r.env_rating,    &r.env_rating_count) == 11)
+                    {
+                        if (strcasecmp(rName, r.name) == 0) { found = 1; break; }
+                    }
+                    fclose(file);
+                }
+
+                if (found)
+                {
+                    inputString(feedback, 200, "Enter your feedback message: ");
+                    FILE *fb = fopen(FEEDBACK_FILE, "a");
+                    if (fb)
+                    {
+                        fprintf(fb, "%s|%s|%s\n", r.name, userGmail, feedback);
+                        fclose(fb);
+                        printf("\nThank you! Feedback saved successfully.\n");
+                    }
+                    else printf("\nError saving feedback!\n");
+                }
+                else printf("\nRestaurant '%s' not found!\n", rName);
+                break;
+            }
+
+            case 4:
+                return;
+        }
+    }
+}
+
+/* ================================================
+   RESTAURANT OWNER PANEL
+   ================================================ */
+
+void restaurantOwner(void)
+{
+    int choice;
+
+    while (1)
+    {
+        printf("\n+======================================================+\n");
+        printf("|               RESTAURANT OWNER PANEL                 |\n");
+        printf("+======================================================+\n");
+        printf("|  1. Add Restaurant                                   |\n");
+        printf("|  2. View Restaurants                                 |\n");
+        printf("|  3. Update Restaurant                                |\n");
+        printf("|  4. Delete Restaurant                                |\n");
+        printf("|  5. Back                                             |\n");
+        printf("+------------------------------------------------------+\n");
+
+        choice = readInt("Enter Choice: ", 1, 5);
+
+        switch (choice)
+        {
+            case 1: addRestaurant();    break;
+            case 2: viewRestaurant();   break;
+            case 3: updateRestaurant(); break;
+            case 4: deleteRestaurant(); break;
+            case 5: return;
+        }
+    }
+}
+
+/* ================================================
+   RESTAURANT MENU
+   ================================================ */
+
+void restaurantMenu(void)
+{
+    int choice;
+
+    while (1)
+    {
+        printf("\n+======================================================+\n");
+        printf("|                  RESTAURANT MENU                     |\n");
+        printf("+======================================================+\n");
+        printf("|  1. Restaurant Owner Panel                           |\n");
+        printf("|  2. Customer Panel                                   |\n");
+        printf("|  3. Back to Main Menu                                |\n");
+        printf("+------------------------------------------------------+\n");
+
+        choice = readInt("Enter Choice: ", 1, 3);
+
+        switch (choice)
+        {
+            case 1: restaurantOwner(); break;
+            case 2: customerPanel();   break;
+            case 3: return;
+        }
+    }
+}
