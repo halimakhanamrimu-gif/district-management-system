@@ -231,3 +231,250 @@ void addRestaurant(void)
     printf("|           RESTAURANT ADDED SUCCESSFULLY!             |\n");
     printf("+======================================================+\n");
 }
+
+/* ================================================
+   VIEW RESTAURANT
+   ================================================ */
+
+void viewRestaurant(void)
+{
+    struct Restaurant r;
+    FILE *file;
+    int count = 0;
+
+    file = fopen(FILE_NAME, "r");
+    if (!file) { printf("\nNo restaurant data found.\n"); return; }
+
+    printf("\n+======================================================+\n");
+    printf("|                   RESTAURANT LIST                    |\n");
+    printf("+======================================================+\n");
+
+    while (fscanf(file,
+                  "%99[^|]|%99[^|]|%99[^|]|%99[^|]|%99[^|]|"
+                  "%f|%d|%f|%d|%f|%d\n",
+                  r.name, r.location, r.owner, r.gmail, r.password,
+                  &r.waiter_rating, &r.waiter_rating_count,
+                  &r.food_rating,   &r.food_rating_count,
+                  &r.env_rating,    &r.env_rating_count) == 11)
+    {
+        count++;
+        printf("\n  Restaurant #%d\n", count);
+        printf("  Name     : %s\n", r.name);
+        printf("  Location : %s\n", r.location);
+        printf("  Owner    : %s\n", r.owner);
+        printf("  Ratings:\n");
+
+        if (r.waiter_rating_count > 0)
+            printf("    Waiter Behavior : %.1f Stars (%d reviews)\n",
+                   r.waiter_rating, r.waiter_rating_count);
+        else
+            printf("    Waiter Behavior : No ratings yet\n");
+
+        if (r.food_rating_count > 0)
+            printf("    Food Quality    : %.1f Stars (%d reviews)\n",
+                   r.food_rating, r.food_rating_count);
+        else
+            printf("    Food Quality    : No ratings yet\n");
+
+        if (r.env_rating_count > 0)
+            printf("    Environment     : %.1f Stars (%d reviews)\n",
+                   r.env_rating, r.env_rating_count);
+        else
+            printf("    Environment     : No ratings yet\n");
+
+        /* feedbacks */
+        FILE *fb = fopen(FEEDBACK_FILE, "r");
+        if (fb)
+        {
+            char fb_rname[100], fb_user[100], fb_msg[200];
+            int  fb_shown = 0;
+            while (fscanf(fb, "%99[^|]|%99[^|]|%199[^\n]\n",
+                          fb_rname, fb_user, fb_msg) == 3)
+            {
+                if (strcasecmp(fb_rname, r.name) == 0)
+                {
+                    if (!fb_shown) printf("  Feedbacks:\n");
+                    printf("    - %s: \"%s\"\n", fb_user, fb_msg);
+                    fb_shown = 1;
+                }
+            }
+            fclose(fb);
+        }
+        printf("+------------------------------------------------------+\n");
+    }
+
+    fclose(file);
+    if (count == 0) printf("  No restaurant data found.\n");
+}
+
+/* ================================================
+   UPDATE RESTAURANT
+   ================================================ */
+
+void updateRestaurant(void)
+{
+    char gmail[100], password[100];
+    struct Restaurant r;
+    FILE *file, *temp;
+    int found = 0;
+
+    printf("\n+======================================================+\n");
+    printf("|                  UPDATE RESTAURANT                   |\n");
+    printf("+======================================================+\n");
+
+    inputString(gmail,    100, "Enter Owner Gmail    : ");
+    inputString(password, 100, "Enter Owner Password : ");
+
+    file = fopen(FILE_NAME, "r");
+    if (!file) { printf("\nNo restaurant data found.\n"); return; }
+
+    temp = fopen(TEMP_FILE, "w");
+    if (!temp) { fclose(file); printf("\nTemp file error.\n"); return; }
+
+    while (fscanf(file,
+                  "%99[^|]|%99[^|]|%99[^|]|%99[^|]|%99[^|]|"
+                  "%f|%d|%f|%d|%f|%d\n",
+                  r.name, r.location, r.owner, r.gmail, r.password,
+                  &r.waiter_rating, &r.waiter_rating_count,
+                  &r.food_rating,   &r.food_rating_count,
+                  &r.env_rating,    &r.env_rating_count) == 11)
+    {
+        if (strcmp(gmail, r.gmail) == 0 && strcmp(password, r.password) == 0)
+        {
+            found = 1;
+            printf("\nLogin successful. Enter new information:\n\n");
+
+            inputString(r.name,     100, "New Restaurant Name  : ");
+            inputString(r.location, 100, "New Location         : ");
+            inputString(r.owner,    100, "New Owner Name       : ");
+
+            while (1) {
+                inputString(r.password, 100, "New Password (min 6) : ");
+                if (isValidPassword(r.password)) break;
+                printf("Password too short! Try again.\n");
+            }
+        }
+
+        fprintf(temp, "%s|%s|%s|%s|%s|%.2f|%d|%.2f|%d|%.2f|%d\n",
+                r.name, r.location, r.owner, r.gmail, r.password,
+                r.waiter_rating, r.waiter_rating_count,
+                r.food_rating,   r.food_rating_count,
+                r.env_rating,    r.env_rating_count);
+    }
+
+    fclose(file);
+    fclose(temp);
+
+    if (found)
+    {
+        remove(FILE_NAME);
+        rename(TEMP_FILE, FILE_NAME);
+        printf("\n+======================================================+\n");
+        printf("|        RESTAURANT UPDATED SUCCESSFULLY!              |\n");
+        printf("+======================================================+\n");
+    }
+    else
+    {
+        remove(TEMP_FILE);
+        printf("\nInvalid Gmail or Password!\n");
+    }
+}
+
+/* ================================================
+   DELETE RESTAURANT
+   ================================================ */
+
+void deleteRestaurant(void)
+{
+    char gmail[100], password[100], confirm[8];
+    struct Restaurant r;
+    FILE *file, *temp;
+    int found = 0;
+
+    printf("\n+======================================================+\n");
+    printf("|                  DELETE RESTAURANT                   |\n");
+    printf("+======================================================+\n");
+
+    inputString(gmail,    100, "Enter Owner Gmail    : ");
+    inputString(password, 100, "Enter Owner Password : ");
+
+    file = fopen(FILE_NAME, "r");
+    if (!file) { printf("\nNo restaurant data found.\n"); return; }
+
+    temp = fopen(TEMP_FILE, "w");
+    if (!temp) { fclose(file); printf("\nTemp file error.\n"); return; }
+
+    while (fscanf(file,
+                  "%99[^|]|%99[^|]|%99[^|]|%99[^|]|%99[^|]|"
+                  "%f|%d|%f|%d|%f|%d\n",
+                  r.name, r.location, r.owner, r.gmail, r.password,
+                  &r.waiter_rating, &r.waiter_rating_count,
+                  &r.food_rating,   &r.food_rating_count,
+                  &r.env_rating,    &r.env_rating_count) == 11)
+    {
+        if (strcmp(gmail, r.gmail) == 0 && strcmp(password, r.password) == 0)
+        {
+            found = 1;
+            continue;
+        }
+
+        fprintf(temp, "%s|%s|%s|%s|%s|%.2f|%d|%.2f|%d|%.2f|%d\n",
+                r.name, r.location, r.owner, r.gmail, r.password,
+                r.waiter_rating, r.waiter_rating_count,
+                r.food_rating,   r.food_rating_count,
+                r.env_rating,    r.env_rating_count);
+    }
+
+    fclose(file);
+    fclose(temp);
+
+    if (!found)
+    {
+        remove(TEMP_FILE);
+        printf("\nInvalid Gmail or Password!\n");
+        return;
+    }
+
+    inputString(confirm, sizeof(confirm),
+                "\nAre you sure? Enter Y to confirm / N to cancel: ");
+
+    if (confirm[0] == 'Y' || confirm[0] == 'y')
+    {
+        remove(FILE_NAME);
+        rename(TEMP_FILE, FILE_NAME);
+        printf("\n+======================================================+\n");
+        printf("|         RESTAURANT DELETED SUCCESSFULLY!             |\n");
+        printf("+======================================================+\n");
+    }
+    else
+    {
+        remove(TEMP_FILE);
+        printf("\nDelete operation cancelled.\n");
+    }
+}
+
+/* ================================================
+   CUSTOMER PANEL
+   ================================================ */
+
+void customerPanel(void)
+{
+    char userGmail[100], userPassword[100];
+
+    while (1)
+    {
+        printf("\n+======================================================+\n");
+        printf("|                  CUSTOMER SECTION                    |\n");
+        printf("+======================================================+\n");
+        printf("|  1. Register New Account                             |\n");
+        printf("|  2. Login                                            |\n");
+        printf("|  3. Back                                             |\n");
+        printf("+------------------------------------------------------+\n");
+
+        int preChoice = readInt("Enter Choice: ", 1, 3);
+
+        if (preChoice == 3) return;
+
+        if (preChoice == 1) { registerCustomer(); continue; }
+
+       
