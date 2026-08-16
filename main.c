@@ -1,22 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 void userPanel(void);
 void restaurantMenu(void);
 void mallMenu(void);
 
-/* readInt is defined as static in each sub-module; we need our own copy here */
 static int mainReadInt(const char *prompt, int min, int max)
 {
-    int  val;
+    int val;
     char line[32];
+
     while (1)
     {
         printf("%s", prompt);
-        if (fgets(line, sizeof(line), stdin) == NULL) continue;
+        if (fgets(line, sizeof(line), stdin) == NULL)
+            continue;
         if (sscanf(line, "%d", &val) == 1 && val >= min && val <= max)
             return val;
+
         printf("Invalid input! Please enter a number between %d and %d.\n", min, max);
     }
 }
