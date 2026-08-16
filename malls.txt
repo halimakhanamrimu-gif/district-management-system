@@ -1,1 +1,1 @@
-Sample Mall|Dhaka|Owner Name|owner@gmail.com|pass123
+Sample Mall|Dhaka|Owner Name|owner@gmail.com|pass123|5.00|1|5.00|1|5.00|1
