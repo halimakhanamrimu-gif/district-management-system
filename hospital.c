@@ -79,3 +79,110 @@ struct Booking
     char doctorName[150];
     char bookingDate[30];
 };
+
+
+
+/* ================================================
+   FUNCTION PROTOTYPES
+   ================================================ */
+
+void userPanel(void);
+void patientPanel(void);
+void adminPanel(void);
+void registerUser(void);
+void viewMyInformation(void);
+void updateMyInformation(void);
+void deleteMyInformation(void);
+void bookDoctor(void);
+void viewMyBookings(void);
+void cancelBooking(void);
+void viewAllUsers(void);
+void viewAllBookings(void);
+
+static void inputString(char str[], int size, const char *message);
+static int  readInt(const char *prompt, int min, int max);
+static int  isValidEmail(const char *email);
+static int  isValidPassword(const char *password);
+int  gmailExists(const char gmail[]);
+int  findUser(const char gmail[], const char password[], struct User *foundUser);
+
+
+/* ================================================
+   HELPERS
+   ================================================ */
+
+static void inputString(char str[], int size, const char *message)
+{
+    printf("%s", message);
+    if (fgets(str, size, stdin) != NULL)
+        str[strcspn(str, "\n")] = '\0';
+}
+
+static int readInt(const char *prompt, int min, int max)
+{
+    int  val;
+    char line[32];
+    while (1)
+    {
+        printf("%s", prompt);
+        if (fgets(line, sizeof(line), stdin) == NULL) continue;
+        if (sscanf(line, "%d", &val) == 1 && val >= min && val <= max)
+            return val;
+        printf("Invalid input! Enter a number between %d and %d: ", min, max);
+    }
+}
+
+static int isValidEmail(const char *email)
+{
+    return (strchr(email, '@') != NULL && strstr(email, ".com") != NULL) ? 1 : 0;
+}
+
+static int isValidPassword(const char *password)
+{
+    return (strlen(password) >= 6) ? 1 : 0;
+}
+
+int gmailExists(const char gmail[])
+{
+    FILE *file = fopen(USER_FILE, "r");
+    if (!file) return 0;
+
+    struct User user;
+    while (fscanf(file,
+                  "%99[^|]|%99[^|]|%99[^|]|%149[^|]|%19[^|]|%19[^|]|%d|%19[^\n]\n",
+                  user.name, user.gmail, user.password,
+                  user.address, user.phone, user.nid,
+                  &user.age, user.gender) == 8)
+    {
+        if (strcmp(user.gmail, gmail) == 0)
+        {
+            fclose(file);
+            return 1;
+        }
+    }
+    fclose(file);
+    return 0;
+}
+
+int findUser(const char gmail[], const char password[], struct User *foundUser)
+{
+    FILE *file = fopen(USER_FILE, "r");
+    if (!file) return 0;
+
+    struct User user;
+    while (fscanf(file,
+                  "%99[^|]|%99[^|]|%99[^|]|%149[^|]|%19[^|]|%19[^|]|%d|%19[^\n]\n",
+                  user.name, user.gmail, user.password,
+                  user.address, user.phone, user.nid,
+                  &user.age, user.gender) == 8)
+    {
+        if (strcmp(gmail, user.gmail) == 0 && strcmp(password, user.password) == 0)
+        {
+            *foundUser = user;
+            fclose(file);
+            return 1;
+        }
+    }
+    fclose(file);
+    return 0;
+}
