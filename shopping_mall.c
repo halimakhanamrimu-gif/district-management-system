@@ -180,3 +180,154 @@ static void registerBuyer(void)
     printf("|   You can now login with your Gmail & Password.      |\n");
     printf("+======================================================+\n");
 }
+
+/* ================================================
+   ADD MALL
+   ================================================ */
+
+void addMall(void)
+{
+    struct Mall mall, temp;
+    FILE *file;
+
+    printf("\n+======================================================+\n");
+    printf("|                  ADD SHOPPING MALL                   |\n");
+    printf("+======================================================+\n");
+
+    inputString(mall.name,     100, "Mall Name              : ");
+    inputString(mall.location, 100, "Location               : ");
+    inputString(mall.owner,    100, "Owner Name             : ");
+
+    while (1) {
+        inputString(mall.gmail, 100, "Owner Gmail (@/.com)   : ");
+        if (isValidEmail(mall.gmail)) break;
+        printf("Invalid email format! Try again.\n");
+    }
+
+    /* Check duplicate gmail in malls.txt */
+    file = fopen(FILE_NAME, "r");
+    if (file)
+    {
+        while (fscanf(file,
+                      "%99[^|]|%99[^|]|%99[^|]|%99[^|]|%99[^|]|"
+                      "%f|%d|%f|%d|%f|%d\n",
+                      temp.name, temp.location, temp.owner,
+                      temp.gmail, temp.password,
+                      &temp.variety_rating,  &temp.variety_rating_count,
+                      &temp.clean_rating,    &temp.clean_rating_count,
+                      &temp.security_rating, &temp.security_rating_count) == 11)
+        {
+            if (strcmp(mall.gmail, temp.gmail) == 0)
+            {
+                fclose(file);
+                printf("\nThis Gmail is already registered! Please use a different Gmail.\n");
+                return;
+            }
+        }
+        fclose(file);
+    }
+
+    while (1) {
+        inputString(mall.password, 100, "Owner Password (min 6) : ");
+        if (isValidPassword(mall.password)) break;
+        printf("Password too short! Try again.\n");
+    }
+
+    mall.variety_rating        = 0.0f;
+    mall.variety_rating_count  = 0;
+    mall.clean_rating          = 0.0f;
+    mall.clean_rating_count    = 0;
+    mall.security_rating       = 0.0f;
+    mall.security_rating_count = 0;
+
+    file = fopen(FILE_NAME, "a");
+    if (!file) { printf("\nError: Cannot open malls.txt!\n"); return; }
+
+    fprintf(file, "%s|%s|%s|%s|%s|%.2f|%d|%.2f|%d|%.2f|%d\n",
+            mall.name, mall.location, mall.owner,
+            mall.gmail, mall.password,
+            mall.variety_rating,  mall.variety_rating_count,
+            mall.clean_rating,    mall.clean_rating_count,
+            mall.security_rating, mall.security_rating_count);
+
+    fclose(file);
+    printf("\n+======================================================+\n");
+    printf("|         SHOPPING MALL ADDED SUCCESSFULLY!            |\n");
+    printf("+======================================================+\n");
+}
+
+/* ================================================
+   VIEW MALL
+   ================================================ */
+
+void viewMall(void)
+{
+    struct Mall mall;
+    FILE *file;
+    int count = 0;
+
+    file = fopen(FILE_NAME, "r");
+    if (!file) { printf("\nNo shopping mall data found.\n"); return; }
+
+    printf("\n+======================================================+\n");
+    printf("|                  SHOPPING MALL LIST                  |\n");
+    printf("+======================================================+\n");
+
+    while (fscanf(file,
+                  "%99[^|]|%99[^|]|%99[^|]|%99[^|]|%99[^|]|"
+                  "%f|%d|%f|%d|%f|%d\n",
+                  mall.name, mall.location, mall.owner,
+                  mall.gmail, mall.password,
+                  &mall.variety_rating,  &mall.variety_rating_count,
+                  &mall.clean_rating,    &mall.clean_rating_count,
+                  &mall.security_rating, &mall.security_rating_count) == 11)
+    {
+        count++;
+        printf("\n  Mall #%d\n", count);
+        printf("  Name     : %s\n", mall.name);
+        printf("  Location : %s\n", mall.location);
+        printf("  Owner    : %s\n", mall.owner);
+        printf("  Ratings:\n");
+
+        if (mall.variety_rating_count > 0)
+            printf("    Shop Variety : %.1f Stars (%d reviews)\n",
+                   mall.variety_rating, mall.variety_rating_count);
+        else
+            printf("    Shop Variety : No ratings yet\n");
+
+        if (mall.clean_rating_count > 0)
+            printf("    Cleanliness  : %.1f Stars (%d reviews)\n",
+                   mall.clean_rating, mall.clean_rating_count);
+        else
+            printf("    Cleanliness  : No ratings yet\n");
+
+        if (mall.security_rating_count > 0)
+            printf("    Security     : %.1f Stars (%d reviews)\n",
+                   mall.security_rating, mall.security_rating_count);
+        else
+            printf("    Security     : No ratings yet\n");
+
+        /* feedbacks */
+        FILE *fb = fopen(FEEDBACK_FILE, "r");
+        if (fb)
+        {
+            char fb_mall[100], fb_user[100], fb_msg[200];
+            int  fb_shown = 0;
+            while (fscanf(fb, "%99[^|]|%99[^|]|%199[^\n]\n",
+                          fb_mall, fb_user, fb_msg) == 3)
+            {
+                if (strcasecmp(fb_mall, mall.name) == 0)
+                {
+                    if (!fb_shown) printf("  Feedbacks:\n");
+                    printf("    - %s: \"%s\"\n", fb_user, fb_msg);
+                    fb_shown = 1;
+                }
+            }
+            fclose(fb);
+        }
+        printf("+------------------------------------------------------+\n");
+    }
+
+    fclose(file);
+    if (count == 0) printf("  No shopping mall data found.\n");
+}
