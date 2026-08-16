@@ -183,3 +183,73 @@ static void registerCustomer(void)
     printf("|    You can now login with your Gmail & Password.     |\n");
     printf("+======================================================+\n");
 }
+
+/* ================================================
+   ADD RESTAURANT
+   ================================================ */
+
+void addRestaurant(void)
+{
+    struct Restaurant r, temp;
+    FILE *file;
+
+    printf("\n+======================================================+\n");
+    printf("|                    ADD RESTAURANT                    |\n");
+    printf("+======================================================+\n");
+
+    inputString(r.name,     100, "Restaurant Name              : ");
+    inputString(r.location, 100, "Location                     : ");
+    inputString(r.owner,    100, "Owner Name                   : ");
+
+    while (1) {
+        inputString(r.gmail, 100, "Owner Gmail (@/.com)         : ");
+        if (isValidEmail(r.gmail)) break;
+        printf("Invalid email format! Try again.\n");
+    }
+
+    /* Check duplicate gmail in restaurants.txt */
+    file = fopen(FILE_NAME, "r");
+    if (file)
+    {
+        while (fscanf(file,
+                      "%99[^|]|%99[^|]|%99[^|]|%99[^|]|%99[^|]|"
+                      "%f|%d|%f|%d|%f|%d\n",
+                      temp.name, temp.location, temp.owner, temp.gmail, temp.password,
+                      &temp.waiter_rating, &temp.waiter_rating_count,
+                      &temp.food_rating,   &temp.food_rating_count,
+                      &temp.env_rating,    &temp.env_rating_count) == 11)
+        {
+            if (strcmp(r.gmail, temp.gmail) == 0)
+            {
+                fclose(file);
+                printf("\nThis Gmail is already registered! Please use a different Gmail.\n");
+                return;
+            }
+        }
+        fclose(file);
+    }
+
+    while (1) {
+        inputString(r.password, 100, "Owner Password (min 6 chars) : ");
+        if (isValidPassword(r.password)) break;
+        printf("Password too short! Try again.\n");
+    }
+
+    r.waiter_rating = 0.0f; r.waiter_rating_count = 0;
+    r.food_rating   = 0.0f; r.food_rating_count   = 0;
+    r.env_rating    = 0.0f; r.env_rating_count    = 0;
+
+    file = fopen(FILE_NAME, "a");
+    if (!file) { printf("\nError: Cannot open restaurants.txt!\n"); return; }
+
+    fprintf(file, "%s|%s|%s|%s|%s|%.2f|%d|%.2f|%d|%.2f|%d\n",
+            r.name, r.location, r.owner, r.gmail, r.password,
+            r.waiter_rating, r.waiter_rating_count,
+            r.food_rating,   r.food_rating_count,
+            r.env_rating,    r.env_rating_count);
+    fclose(file);
+
+    printf("\n+======================================================+\n");
+    printf("|           RESTAURANT ADDED SUCCESSFULLY!             |\n");
+    printf("+======================================================+\n");
+}
