@@ -331,3 +331,94 @@ void viewMall(void)
     fclose(file);
     if (count == 0) printf("  No shopping mall data found.\n");
 }
+
+/* ================================================
+   UPDATE MALL
+   ================================================ */
+
+void updateMall(void)
+{
+    char gmail[100], password[100], newGmail[100];
+    struct Mall mall;
+    FILE *file, *temp;
+    int found = 0, choice;
+
+    printf("\n+======================================================+\n");
+    printf("|                 UPDATE SHOPPING MALL                 |\n");
+    printf("+======================================================+\n");
+
+    inputString(gmail,    100, "Enter Owner Gmail    : ");
+    inputString(password, 100, "Enter Owner Password : ");
+
+    file = fopen(FILE_NAME, "r");
+    if (!file) { printf("\nNo shopping mall data found.\n"); return; }
+
+    temp = fopen(TEMP_FILE, "w");
+    if (!temp) { fclose(file); printf("\nTemp file error.\n"); return; }
+
+    while (fscanf(file,
+                  "%99[^|]|%99[^|]|%99[^|]|%99[^|]|%99[^|]|"
+                  "%f|%d|%f|%d|%f|%d\n",
+                  mall.name, mall.location, mall.owner,
+                  mall.gmail, mall.password,
+                  &mall.variety_rating,  &mall.variety_rating_count,
+                  &mall.clean_rating,    &mall.clean_rating_count,
+                  &mall.security_rating, &mall.security_rating_count) == 11)
+    {
+        if (strcmp(gmail, mall.gmail) == 0 &&
+            strcmp(password, mall.password) == 0)
+        {
+            found = 1;
+            printf("\nLogin successful. Enter new information:\n\n");
+
+            inputString(mall.name,     100, "New Mall Name              : ");
+            inputString(mall.location, 100, "New Location               : ");
+            inputString(mall.owner,    100, "New Owner Name             : ");
+
+            printf("\nDo you want to update Owner Gmail?\n");
+            printf("  1. Yes\n  2. No\n");
+            choice = readInt("Enter Choice: ", 1, 2);
+
+            if (choice == 1)
+            {
+                while (1) {
+                    inputString(newGmail, 100, "New Owner Gmail (@/.com) : ");
+                    if (isValidEmail(newGmail)) break;
+                    printf("Invalid email format! Try again.\n");
+                }
+                strncpy(mall.gmail, newGmail, 99);
+                mall.gmail[99] = '\0';
+            }
+
+            while (1) {
+                inputString(mall.password, 100, "New Password (min 6)       : ");
+                if (isValidPassword(mall.password)) break;
+                printf("Password too short! Try again.\n");
+            }
+        }
+
+        fprintf(temp, "%s|%s|%s|%s|%s|%.2f|%d|%.2f|%d|%.2f|%d\n",
+                mall.name, mall.location, mall.owner,
+                mall.gmail, mall.password,
+                mall.variety_rating,  mall.variety_rating_count,
+                mall.clean_rating,    mall.clean_rating_count,
+                mall.security_rating, mall.security_rating_count);
+    }
+
+    fclose(file);
+    fclose(temp);
+
+    if (found)
+    {
+        remove(FILE_NAME);
+        rename(TEMP_FILE, FILE_NAME);
+        printf("\n+======================================================+\n");
+        printf("|        SHOPPING MALL UPDATED SUCCESSFULLY!           |\n");
+        printf("+======================================================+\n");
+    }
+    else
+    {
+        remove(TEMP_FILE);
+        printf("\nInvalid Gmail or Password!\n");
+    }
+}
