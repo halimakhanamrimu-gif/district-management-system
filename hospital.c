@@ -819,3 +819,77 @@ void patientPanel(void)
     }
 }
 
+
+/* ================================================
+   ADMIN PANEL
+   ================================================ */
+
+void adminPanel(void)
+{
+    char pass[50];
+    int choice;
+
+    printf("\n+======================================================+\n");
+    printf("|                    ADMIN LOGIN                       |\n");
+    printf("+======================================================+\n");
+
+    inputString(pass, sizeof(pass), "Enter Admin Password: ");
+
+    if (strcmp(pass, ADMIN_PASS) != 0)
+    {
+        printf("\nIncorrect Admin Password! Access Denied.\n");
+        return;
+    }
+
+    printf("\nAdmin access granted.\n");
+
+    while (1)
+    {
+        printf("\n+======================================================+\n");
+        printf("|                    ADMIN PANEL                       |\n");
+        printf("+======================================================+\n");
+        printf("|  1. View All Registered Users                        |\n");
+        printf("|  2. View All Bookings                                |\n");
+        printf("|  3. Back                                             |\n");
+        printf("+------------------------------------------------------+\n");
+
+        choice = readInt("=> Enter choice: ", 1, 3);
+
+        switch (choice)
+        {
+            case 1: viewAllUsers();    break;
+            case 2: viewAllBookings(); break;
+            case 3: return;
+        }
+    }
+}
+
+
+/* ================================================
+   MAIN USER PANEL  (entry from main menu)
+   ================================================ */
+
+void userPanel(void)
+{
+    int choice;
+
+    while (1)
+    {
+        printf("\n+======================================================+\n");
+        printf("|               HOSPITAL MANAGEMENT                    |\n");
+        printf("+======================================================+\n");
+        printf("|  1. Patient Panel                                    |\n");
+        printf("|  2. Admin Panel                                      |\n");
+        printf("|  3. Back to Main Menu                                |\n");
+        printf("+------------------------------------------------------+\n");
+
+        choice = readInt("=> Enter choice: ", 1, 3);
+
+        switch (choice)
+        {
+            case 1: patientPanel(); break;
+            case 2: adminPanel();   break;
+            case 3: return;
+        }
+    }
+}
