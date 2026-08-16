@@ -416,3 +416,76 @@ void updateRestaurant(void)
         printf("\nInvalid Gmail or Password!\n");
     }
 }
+
+/* ================================================
+   DELETE RESTAURANT
+   ================================================ */
+
+void deleteRestaurant(void)
+{
+    char gmail[100], password[100], confirm[8];
+    struct Restaurant r;
+    FILE *file, *temp;
+    int found = 0;
+
+    printf("\n+======================================================+\n");
+    printf("|                  DELETE RESTAURANT                   |\n");
+    printf("+======================================================+\n");
+
+    inputString(gmail,    100, "Enter Owner Gmail    : ");
+    inputString(password, 100, "Enter Owner Password : ");
+
+    file = fopen(FILE_NAME, "r");
+    if (!file) { printf("\nNo restaurant data found.\n"); return; }
+
+    temp = fopen(TEMP_FILE, "w");
+    if (!temp) { fclose(file); printf("\nTemp file error.\n"); return; }
+
+    while (fscanf(file,
+                  "%99[^|]|%99[^|]|%99[^|]|%99[^|]|%99[^|]|"
+                  "%f|%d|%f|%d|%f|%d\n",
+                  r.name, r.location, r.owner, r.gmail, r.password,
+                  &r.waiter_rating, &r.waiter_rating_count,
+                  &r.food_rating,   &r.food_rating_count,
+                  &r.env_rating,    &r.env_rating_count) == 11)
+    {
+        if (strcmp(gmail, r.gmail) == 0 && strcmp(password, r.password) == 0)
+        {
+            found = 1;
+            continue;
+        }
+
+        fprintf(temp, "%s|%s|%s|%s|%s|%.2f|%d|%.2f|%d|%.2f|%d\n",
+                r.name, r.location, r.owner, r.gmail, r.password,
+                r.waiter_rating, r.waiter_rating_count,
+                r.food_rating,   r.food_rating_count,
+                r.env_rating,    r.env_rating_count);
+    }
+
+    fclose(file);
+    fclose(temp);
+
+    if (!found)
+    {
+        remove(TEMP_FILE);
+        printf("\nInvalid Gmail or Password!\n");
+        return;
+    }
+
+    inputString(confirm, sizeof(confirm),
+                "\nAre you sure? Enter Y to confirm / N to cancel: ");
+
+    if (confirm[0] == 'Y' || confirm[0] == 'y')
+    {
+        remove(FILE_NAME);
+        rename(TEMP_FILE, FILE_NAME);
+        printf("\n+======================================================+\n");
+        printf("|         RESTAURANT DELETED SUCCESSFULLY!             |\n");
+        printf("+======================================================+\n");
+    }
+    else
+    {
+        remove(TEMP_FILE);
+        printf("\nDelete operation cancelled.\n");
+    }
+}
