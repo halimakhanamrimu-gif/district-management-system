@@ -697,3 +697,32 @@ void restaurantOwner(void)
         }
     }
 }
+
+/* ================================================
+   RESTAURANT MENU
+   ================================================ */
+
+void restaurantMenu(void)
+{
+    int choice;
+
+    while (1)
+    {
+        printf("\n+======================================================+\n");
+        printf("|                  RESTAURANT MENU                     |\n");
+        printf("+======================================================+\n");
+        printf("|  1. Restaurant Owner Panel                           |\n");
+        printf("|  2. Customer Panel                                   |\n");
+        printf("|  3. Back to Main Menu                                |\n");
+        printf("+------------------------------------------------------+\n");
+
+        choice = readInt("Enter Choice: ", 1, 3);
+
+        switch (choice)
+        {
+            case 1: restaurantOwner(); break;
+            case 2: customerPanel();   break;
+            case 3: return;
+        }
+    }
+}
