@@ -664,3 +664,36 @@ void customerPanel(void)
         }
     }
 }
+
+/* ================================================
+   RESTAURANT OWNER PANEL
+   ================================================ */
+
+void restaurantOwner(void)
+{
+    int choice;
+
+    while (1)
+    {
+        printf("\n+======================================================+\n");
+        printf("|               RESTAURANT OWNER PANEL                 |\n");
+        printf("+======================================================+\n");
+        printf("|  1. Add Restaurant                                   |\n");
+        printf("|  2. View Restaurants                                 |\n");
+        printf("|  3. Update Restaurant                                |\n");
+        printf("|  4. Delete Restaurant                                |\n");
+        printf("|  5. Back                                             |\n");
+        printf("+------------------------------------------------------+\n");
+
+        choice = readInt("Enter Choice: ", 1, 5);
+
+        switch (choice)
+        {
+            case 1: addRestaurant();    break;
+            case 2: viewRestaurant();   break;
+            case 3: updateRestaurant(); break;
+            case 4: deleteRestaurant(); break;
+            case 5: return;
+        }
+    }
+}
