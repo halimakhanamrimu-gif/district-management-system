@@ -692,3 +692,130 @@ void cancelBooking(void)
         printf("\nSomething went wrong. Booking not cancelled.\n");
     }
 }
+
+
+/* ================================================
+   ADMIN — VIEW ALL USERS
+   ================================================ */
+
+void viewAllUsers(void)
+{
+    struct User user;
+    FILE *file;
+    int count = 0;
+
+    file = fopen(USER_FILE, "r");
+    if (!file) { printf("\nNo users registered yet.\n"); return; }
+
+    printf("\n+======================================================+\n");
+    printf("|              REGISTERED USER LIST                    |\n");
+    printf("+======================================================+\n");
+
+    while (fscanf(file,
+                  "%99[^|]|%99[^|]|%99[^|]|%149[^|]|%19[^|]|%19[^|]|%d|%19[^\n]\n",
+                  user.name, user.gmail, user.password,
+                  user.address, user.phone, user.nid,
+                  &user.age, user.gender) == 8)
+    {
+        count++;
+        printf("\n  User #%d\n", count);
+        printf("  Name    : %s\n", user.name);
+        printf("  Gmail   : %s\n", user.gmail);
+        printf("  Address : %s\n", user.address);
+        printf("  Phone   : %s\n", user.phone);
+        printf("  NID     : %s\n", user.nid);
+        printf("  Age     : %d\n", user.age);
+        printf("  Gender  : %s\n", user.gender);
+        printf("+------------------------------------------------------+\n");
+    }
+
+    fclose(file);
+
+    if (count == 0)
+        printf("  No users found.\n");
+    else
+        printf("\n  Total Registered Users: %d\n", count);
+}
+
+
+/* ================================================
+   ADMIN — VIEW ALL BOOKINGS
+   ================================================ */
+
+void viewAllBookings(void)
+{
+    struct Booking booking;
+    FILE *file;
+    int count = 0;
+
+    file = fopen(BOOKING_FILE, "r");
+    if (!file) { printf("\nNo bookings found.\n"); return; }
+
+    printf("\n+======================================================+\n");
+    printf("|                  ALL BOOKINGS                        |\n");
+    printf("+======================================================+\n");
+
+    while (fscanf(file,
+                  "%99[^|]|%19[^|]|%149[^|]|%149[^|]|%29[^\n]\n",
+                  booking.userGmail, booking.userNID,
+                  booking.hospitalName, booking.doctorName,
+                  booking.bookingDate) == 5)
+    {
+        count++;
+        printf("\n  Booking #%d\n", count);
+        printf("  Patient Gmail : %s\n", booking.userGmail);
+        printf("  Patient NID   : %s\n", booking.userNID);
+        printf("  Hospital      : %s\n", booking.hospitalName);
+        printf("  Doctor        : %s\n", booking.doctorName);
+        printf("  Date          : %s\n", booking.bookingDate);
+        printf("+------------------------------------------------------+\n");
+    }
+
+    fclose(file);
+
+    if (count == 0)
+        printf("  No bookings found.\n");
+    else
+        printf("\n  Total Bookings: %d\n", count);
+}
+
+
+/* ================================================
+   PATIENT PANEL
+   ================================================ */
+
+void patientPanel(void)
+{
+    int choice;
+
+    while (1)
+    {
+        printf("\n+======================================================+\n");
+        printf("|                   PATIENT PANEL                      |\n");
+        printf("+======================================================+\n");
+        printf("|  1. Register New Account                             |\n");
+        printf("|  2. View My Information                              |\n");
+        printf("|  3. Update My Information                            |\n");
+        printf("|  4. Delete My Account                                |\n");
+        printf("|  5. Book a Doctor                                    |\n");
+        printf("|  6. View My Bookings                                 |\n");
+        printf("|  7. Cancel a Booking                                 |\n");
+        printf("|  8. Back                                             |\n");
+        printf("+------------------------------------------------------+\n");
+
+        choice = readInt("=> Enter choice: ", 1, 8);
+
+        switch (choice)
+        {
+            case 1: registerUser();        break;
+            case 2: viewMyInformation();   break;
+            case 3: updateMyInformation(); break;
+            case 4: deleteMyInformation(); break;
+            case 5: bookDoctor();          break;
+            case 6: viewMyBookings();      break;
+            case 7: cancelBooking();       break;
+            case 8: return;
+        }
+    }
+}
+
