@@ -422,3 +422,264 @@ void updateMall(void)
         printf("\nInvalid Gmail or Password!\n");
     }
 }
+
+/* ================================================
+   DELETE MALL
+   ================================================ */
+
+void deleteMall(void)
+{
+    char gmail[100], password[100], confirm[8];
+    struct Mall mall;
+    FILE *file, *temp;
+    int found = 0;
+
+    printf("\n+======================================================+\n");
+    printf("|                 DELETE SHOPPING MALL                 |\n");
+    printf("+======================================================+\n");
+
+    inputString(gmail,    100, "Enter Owner Gmail    : ");
+    inputString(password, 100, "Enter Owner Password : ");
+
+    file = fopen(FILE_NAME, "r");
+    if (!file) { printf("\nNo shopping mall data found.\n"); return; }
+
+    temp = fopen(TEMP_FILE, "w");
+    if (!temp) { fclose(file); printf("\nTemp file error.\n"); return; }
+
+    while (fscanf(file,
+                  "%99[^|]|%99[^|]|%99[^|]|%99[^|]|%99[^|]|"
+                  "%f|%d|%f|%d|%f|%d\n",
+                  mall.name, mall.location, mall.owner,
+                  mall.gmail, mall.password,
+                  &mall.variety_rating,  &mall.variety_rating_count,
+                  &mall.clean_rating,    &mall.clean_rating_count,
+                  &mall.security_rating, &mall.security_rating_count) == 11)
+    {
+        if (strcmp(gmail, mall.gmail) == 0 &&
+            strcmp(password, mall.password) == 0)
+        {
+            found = 1;
+            continue;   /* skip — mark for deletion */
+        }
+
+        fprintf(temp, "%s|%s|%s|%s|%s|%.2f|%d|%.2f|%d|%.2f|%d\n",
+                mall.name, mall.location, mall.owner,
+                mall.gmail, mall.password,
+                mall.variety_rating,  mall.variety_rating_count,
+                mall.clean_rating,    mall.clean_rating_count,
+                mall.security_rating, mall.security_rating_count);
+    }
+
+    fclose(file);
+    fclose(temp);
+
+    if (!found)
+    {
+        remove(TEMP_FILE);
+        printf("\nInvalid Gmail or Password!\n");
+        return;
+    }
+
+    inputString(confirm, sizeof(confirm),
+                "\nAre you sure? Enter Y to confirm / N to cancel: ");
+
+    if (confirm[0] == 'Y' || confirm[0] == 'y')
+    {
+        remove(FILE_NAME);
+        rename(TEMP_FILE, FILE_NAME);
+        printf("\n+======================================================+\n");
+        printf("|        SHOPPING MALL DELETED SUCCESSFULLY!           |\n");
+        printf("+======================================================+\n");
+    }
+    else
+    {
+        remove(TEMP_FILE);
+        printf("\nDelete operation cancelled.\n");
+    }
+}
+
+/* ================================================
+   BUYER PANEL
+   ================================================ */
+
+void buyerPanel(void)
+{
+    char userGmail[100], userPassword[100];
+    int preChoice;
+
+    while (1)
+    {
+        printf("\n+======================================================+\n");
+        printf("|                  BUYER SECTION                       |\n");
+        printf("+======================================================+\n");
+        printf("|  1. Register New Account                             |\n");
+        printf("|  2. Login                                            |\n");
+        printf("|  3. Back                                             |\n");
+        printf("+------------------------------------------------------+\n");
+
+        preChoice = readInt("Enter Choice: ", 1, 3);
+
+        if (preChoice == 3) return;
+
+        if (preChoice == 1)
+        {
+            registerBuyer();
+            continue;
+        }
+
+        /* Login */
+        printf("\n+======================================================+\n");
+        printf("|                    BUYER LOGIN                       |\n");
+        printf("+======================================================+\n");
+
+        inputString(userGmail,    100, "Enter your Gmail    : ");
+        inputString(userPassword, 100, "Enter your Password : ");
+
+        if (!checkGlobalUser(userGmail, userPassword))
+        {
+            printf("\nInvalid Gmail or Password! Access Denied.\n");
+            continue;
+        }
+
+        break;  /* login ok */
+    }
+
+    printf("\nLogin Successful! Welcome.\n");
+
+    int choice;
+    while (1)
+    {
+        printf("\n+======================================================+\n");
+        printf("|                    BUYER PANEL                       |\n");
+        printf("+======================================================+\n");
+        printf("|  1. View All Shopping Malls                          |\n");
+        printf("|  2. Rate a Shopping Mall                             |\n");
+        printf("|  3. Give Feedback                                    |\n");
+        printf("|  4. Logout                                           |\n");
+        printf("+------------------------------------------------------+\n");
+
+        choice = readInt("Enter Choice: ", 1, 4);
+
+        switch (choice)
+        {
+            case 1:
+                viewMall();
+                break;
+
+            /* ---- Rating ---- */
+            case 2:
+            {
+                char mallName[100];
+                struct Mall mall;
+                FILE *file, *temp;
+                int found = 0;
+
+                inputString(mallName, 100, "Enter Mall Name to rate: ");
+
+                file = fopen(FILE_NAME, "r");
+                if (!file) { printf("\nNo mall data found.\n"); break; }
+
+                temp = fopen(TEMP_FILE, "w");
+                if (!temp) { fclose(file); printf("\nTemp file error.\n"); break; }
+
+                while (fscanf(file,
+                              "%99[^|]|%99[^|]|%99[^|]|%99[^|]|%99[^|]|"
+                              "%f|%d|%f|%d|%f|%d\n",
+                              mall.name, mall.location, mall.owner,
+                              mall.gmail, mall.password,
+                              &mall.variety_rating,  &mall.variety_rating_count,
+                              &mall.clean_rating,    &mall.clean_rating_count,
+                              &mall.security_rating, &mall.security_rating_count) == 11)
+                {
+                    if (strcasecmp(mallName, mall.name) == 0 && !found)
+                    {
+                        found = 1;
+                        printf("\nMall found! Enter ratings (1-5 stars).\n");
+
+                        int vR = readInt("Shop Variety Rating : ", 1, 5);
+                        int cR = readInt("Cleanliness Rating  : ", 1, 5);
+                        int sR = readInt("Security Rating     : ", 1, 5);
+
+                        mall.variety_rating =
+                            (mall.variety_rating * mall.variety_rating_count + vR)
+                            / (float)(mall.variety_rating_count + 1);
+                        mall.variety_rating_count++;
+
+                        mall.clean_rating =
+                            (mall.clean_rating * mall.clean_rating_count + cR)
+                            / (float)(mall.clean_rating_count + 1);
+                        mall.clean_rating_count++;
+
+                        mall.security_rating =
+                            (mall.security_rating * mall.security_rating_count + sR)
+                            / (float)(mall.security_rating_count + 1);
+                        mall.security_rating_count++;
+
+                        printf("\nThank you! Ratings updated successfully.\n");
+                    }
+
+                    fprintf(temp, "%s|%s|%s|%s|%s|%.2f|%d|%.2f|%d|%.2f|%d\n",
+                            mall.name, mall.location, mall.owner,
+                            mall.gmail, mall.password,
+                            mall.variety_rating,  mall.variety_rating_count,
+                            mall.clean_rating,    mall.clean_rating_count,
+                            mall.security_rating, mall.security_rating_count);
+                }
+
+                fclose(file);
+                fclose(temp);
+
+                if (found) { remove(FILE_NAME); rename(TEMP_FILE, FILE_NAME); }
+                else       { remove(TEMP_FILE); printf("\nMall '%s' not found!\n", mallName); }
+                break;
+            }
+
+            /* ---- Feedback ---- */
+            case 3:
+            {
+                char mallName[100], feedback[200];
+                struct Mall mall;
+                int found = 0;
+                FILE *file;
+
+                inputString(mallName, 100, "Enter Mall Name for feedback: ");
+
+                file = fopen(FILE_NAME, "r");
+                if (file)
+                {
+                    while (fscanf(file,
+                                  "%99[^|]|%99[^|]|%99[^|]|%99[^|]|%99[^|]|"
+                                  "%f|%d|%f|%d|%f|%d\n",
+                                  mall.name, mall.location, mall.owner,
+                                  mall.gmail, mall.password,
+                                  &mall.variety_rating,  &mall.variety_rating_count,
+                                  &mall.clean_rating,    &mall.clean_rating_count,
+                                  &mall.security_rating, &mall.security_rating_count) == 11)
+                    {
+                        if (strcasecmp(mallName, mall.name) == 0) { found = 1; break; }
+                    }
+                    fclose(file);
+                }
+
+                if (found)
+                {
+                    inputString(feedback, 200, "Enter your feedback message: ");
+                    FILE *fb = fopen(FEEDBACK_FILE, "a");
+                    if (fb)
+                    {
+                        fprintf(fb, "%s|%s|%s\n", mall.name, userGmail, feedback);
+                        fclose(fb);
+                        printf("\nThank you! Feedback saved.\n");
+                    }
+                    else printf("\nError saving feedback!\n");
+                }
+                else printf("\nMall '%s' not found!\n", mallName);
+                break;
+            }
+
+            case 4:
+                return;
+        }
+    }
+}
