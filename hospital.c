@@ -520,3 +520,175 @@ void bookDoctor(void)
     printf("+------------------------------------------------------+\n");
 }
 
+
+/* ================================================
+   VIEW MY BOOKINGS
+   ================================================ */
+
+void viewMyBookings(void)
+{
+    char gmail[100], password[100];
+    struct User user;
+    struct Booking booking;
+    FILE *file;
+    int count = 0;
+
+    printf("\n+======================================================+\n");
+    printf("|                  MY BOOKINGS                         |\n");
+    printf("+======================================================+\n");
+
+    inputString(gmail,    sizeof(gmail),    "Enter your Gmail    : ");
+    inputString(password, sizeof(password), "Enter your Password : ");
+
+    if (!findUser(gmail, password, &user))
+    {
+        printf("\nInvalid Gmail or Password! Access Denied.\n");
+        return;
+    }
+
+    file = fopen(BOOKING_FILE, "r");
+    if (!file) { printf("\nNo bookings found.\n"); return; }
+
+    printf("\nBookings for: %s  (NID: %s)\n", user.name, user.nid);
+    printf("+------------------------------------------------------+\n");
+
+    while (fscanf(file,
+                  "%99[^|]|%19[^|]|%149[^|]|%149[^|]|%29[^\n]\n",
+                  booking.userGmail, booking.userNID,
+                  booking.hospitalName, booking.doctorName,
+                  booking.bookingDate) == 5)
+    {
+        if (strcmp(booking.userGmail, gmail) == 0)
+        {
+            count++;
+            printf("  Booking #%d\n", count);
+            printf("  NID      : %s\n", booking.userNID);
+            printf("  Hospital : %s\n", booking.hospitalName);
+            printf("  Doctor   : %s\n", booking.doctorName);
+            printf("  Date     : %s\n", booking.bookingDate);
+            printf("+------------------------------------------------------+\n");
+        }
+    }
+
+    fclose(file);
+
+    if (count == 0)
+    {
+        printf("  You have no bookings yet.\n");
+        printf("+------------------------------------------------------+\n");
+    }
+}
+
+
+/* ================================================
+   CANCEL A BOOKING
+   ================================================ */
+
+void cancelBooking(void)
+{
+    char gmail[100], password[100], confirm[8];
+    struct User user;
+    struct Booking booking;
+    FILE *file, *temp;
+    int count = 0, cancelNo, current = 0, found = 0;
+
+    printf("\n+======================================================+\n");
+    printf("|                 CANCEL A BOOKING                     |\n");
+    printf("+======================================================+\n");
+
+    inputString(gmail,    sizeof(gmail),    "Enter your Gmail    : ");
+    inputString(password, sizeof(password), "Enter your Password : ");
+
+    if (!findUser(gmail, password, &user))
+    {
+        printf("\nInvalid Gmail or Password! Access Denied.\n");
+        return;
+    }
+
+    file = fopen(BOOKING_FILE, "r");
+    if (!file) { printf("\nNo bookings found.\n"); return; }
+
+    printf("\nYour current bookings:\n");
+    printf("+------------------------------------------------------+\n");
+
+    while (fscanf(file,
+                  "%99[^|]|%19[^|]|%149[^|]|%149[^|]|%29[^\n]\n",
+                  booking.userGmail, booking.userNID,
+                  booking.hospitalName, booking.doctorName,
+                  booking.bookingDate) == 5)
+    {
+        if (strcmp(booking.userGmail, gmail) == 0)
+        {
+            count++;
+            printf("  Booking #%d\n", count);
+            printf("  Hospital : %s\n", booking.hospitalName);
+            printf("  Doctor   : %s\n", booking.doctorName);
+            printf("  Date     : %s\n", booking.bookingDate);
+            printf("+------------------------------------------------------+\n");
+        }
+    }
+    fclose(file);
+
+    if (count == 0)
+    {
+        printf("  You have no bookings to cancel.\n");
+        return;
+    }
+
+    cancelNo = readInt("Enter Booking Number to cancel: ", 1, count);
+
+    inputString(confirm, sizeof(confirm),
+                "Are you sure? Enter Y to confirm / N to cancel: ");
+
+    if (confirm[0] != 'Y' && confirm[0] != 'y')
+    {
+        printf("\nCancellation aborted.\n");
+        return;
+    }
+
+    file = fopen(BOOKING_FILE, "r");
+    temp = fopen(TEMP_BOOKING, "w");
+
+    if (!file || !temp)
+    {
+        printf("\nFile error!\n");
+        if (file) fclose(file);
+        if (temp) fclose(temp);
+        return;
+    }
+
+    while (fscanf(file,
+                  "%99[^|]|%19[^|]|%149[^|]|%149[^|]|%29[^\n]\n",
+                  booking.userGmail, booking.userNID,
+                  booking.hospitalName, booking.doctorName,
+                  booking.bookingDate) == 5)
+    {
+        if (strcmp(booking.userGmail, gmail) == 0)
+        {
+            current++;
+            if (current == cancelNo) { found = 1; continue; }
+        }
+
+        fprintf(temp, "%s|%s|%s|%s|%s\n",
+                booking.userGmail, booking.userNID,
+                booking.hospitalName, booking.doctorName,
+                booking.bookingDate);
+    }
+
+    fclose(file);
+    fclose(temp);
+
+    if (found)
+    {
+        remove(BOOKING_FILE);
+        rename(TEMP_BOOKING, BOOKING_FILE);
+        printf("\n+======================================================+\n");
+        printf("|          BOOKING CANCELLED SUCCESSFULLY!             |\n");
+        printf("+======================================================+\n");
+    }
+    else
+    {
+        remove(TEMP_BOOKING);
+        printf("\nSomething went wrong. Booking not cancelled.\n");
+    }
+}
