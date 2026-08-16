@@ -253,3 +253,79 @@ void addRestaurant(void)
     printf("|           RESTAURANT ADDED SUCCESSFULLY!             |\n");
     printf("+======================================================+\n");
 }
+
+/* ================================================
+   VIEW RESTAURANT
+   ================================================ */
+
+void viewRestaurant(void)
+{
+    struct Restaurant r;
+    FILE *file;
+    int count = 0;
+
+    file = fopen(FILE_NAME, "r");
+    if (!file) { printf("\nNo restaurant data found.\n"); return; }
+
+    printf("\n+======================================================+\n");
+    printf("|                   RESTAURANT LIST                    |\n");
+    printf("+======================================================+\n");
+
+    while (fscanf(file,
+                  "%99[^|]|%99[^|]|%99[^|]|%99[^|]|%99[^|]|"
+                  "%f|%d|%f|%d|%f|%d\n",
+                  r.name, r.location, r.owner, r.gmail, r.password,
+                  &r.waiter_rating, &r.waiter_rating_count,
+                  &r.food_rating,   &r.food_rating_count,
+                  &r.env_rating,    &r.env_rating_count) == 11)
+    {
+        count++;
+        printf("\n  Restaurant #%d\n", count);
+        printf("  Name     : %s\n", r.name);
+        printf("  Location : %s\n", r.location);
+        printf("  Owner    : %s\n", r.owner);
+        printf("  Ratings:\n");
+
+        if (r.waiter_rating_count > 0)
+            printf("    Waiter Behavior : %.1f Stars (%d reviews)\n",
+                   r.waiter_rating, r.waiter_rating_count);
+        else
+            printf("    Waiter Behavior : No ratings yet\n");
+
+        if (r.food_rating_count > 0)
+            printf("    Food Quality    : %.1f Stars (%d reviews)\n",
+                   r.food_rating, r.food_rating_count);
+        else
+            printf("    Food Quality    : No ratings yet\n");
+
+        if (r.env_rating_count > 0)
+            printf("    Environment     : %.1f Stars (%d reviews)\n",
+                   r.env_rating, r.env_rating_count);
+        else
+            printf("    Environment     : No ratings yet\n");
+
+        /* feedbacks */
+        FILE *fb = fopen(FEEDBACK_FILE, "r");
+        if (fb)
+        {
+            char fb_rname[100], fb_user[100], fb_msg[200];
+            int  fb_shown = 0;
+            while (fscanf(fb, "%99[^|]|%99[^|]|%199[^\n]\n",
+                          fb_rname, fb_user, fb_msg) == 3)
+            {
+                if (strcasecmp(fb_rname, r.name) == 0)
+                {
+                    if (!fb_shown) printf("  Feedbacks:\n");
+                    printf("    - %s: \"%s\"\n", fb_user, fb_msg);
+                    fb_shown = 1;
+                }
+            }
+            fclose(fb);
+        }
+        printf("+------------------------------------------------------+\n");
+    }
+
+    fclose(file);
+    if (count == 0) printf("  No restaurant data found.\n");
+}
+
