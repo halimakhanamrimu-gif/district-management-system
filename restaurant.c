@@ -329,3 +329,90 @@ void viewRestaurant(void)
     if (count == 0) printf("  No restaurant data found.\n");
 }
 
+/* ================================================
+   UPDATE RESTAURANT
+   ================================================ */
+
+void updateRestaurant(void)
+{
+    char gmail[100], password[100], newGmail[100];
+    struct Restaurant r;
+    FILE *file, *temp;
+    int found = 0, choice;
+
+    printf("\n+======================================================+\n");
+    printf("|                  UPDATE RESTAURANT                   |\n");
+    printf("+======================================================+\n");
+
+    inputString(gmail,    100, "Enter Owner Gmail    : ");
+    inputString(password, 100, "Enter Owner Password : ");
+
+    file = fopen(FILE_NAME, "r");
+    if (!file) { printf("\nNo restaurant data found.\n"); return; }
+
+    temp = fopen(TEMP_FILE, "w");
+    if (!temp) { fclose(file); printf("\nTemp file error.\n"); return; }
+
+    while (fscanf(file,
+                  "%99[^|]|%99[^|]|%99[^|]|%99[^|]|%99[^|]|"
+                  "%f|%d|%f|%d|%f|%d\n",
+                  r.name, r.location, r.owner, r.gmail, r.password,
+                  &r.waiter_rating, &r.waiter_rating_count,
+                  &r.food_rating,   &r.food_rating_count,
+                  &r.env_rating,    &r.env_rating_count) == 11)
+    {
+        if (strcmp(gmail, r.gmail) == 0 && strcmp(password, r.password) == 0)
+        {
+            found = 1;
+            printf("\nLogin successful. Enter new information:\n\n");
+
+            inputString(r.name,     100, "New Restaurant Name  : ");
+            inputString(r.location, 100, "New Location         : ");
+            inputString(r.owner,    100, "New Owner Name       : ");
+
+            printf("\nDo you want to update Owner Gmail?\n");
+            printf("  1. Yes\n  2. No\n");
+            choice = readInt("Enter Choice: ", 1, 2);
+
+            if (choice == 1)
+            {
+                while (1) {
+                    inputString(newGmail, 100, "New Owner Gmail (@/.com) : ");
+                    if (isValidEmail(newGmail)) break;
+                    printf("Invalid email format! Try again.\n");
+                }
+                strncpy(r.gmail, newGmail, 99);
+                r.gmail[99] = '\0';
+            }
+
+            while (1) {
+                inputString(r.password, 100, "New Password (min 6) : ");
+                if (isValidPassword(r.password)) break;
+                printf("Password too short! Try again.\n");
+            }
+        }
+
+        fprintf(temp, "%s|%s|%s|%s|%s|%.2f|%d|%.2f|%d|%.2f|%d\n",
+                r.name, r.location, r.owner, r.gmail, r.password,
+                r.waiter_rating, r.waiter_rating_count,
+                r.food_rating,   r.food_rating_count,
+                r.env_rating,    r.env_rating_count);
+    }
+
+    fclose(file);
+    fclose(temp);
+
+    if (found)
+    {
+        remove(FILE_NAME);
+        rename(TEMP_FILE, FILE_NAME);
+        printf("\n+======================================================+\n");
+        printf("|        RESTAURANT UPDATED SUCCESSFULLY!              |\n");
+        printf("+======================================================+\n");
+    }
+    else
+    {
+        remove(TEMP_FILE);
+        printf("\nInvalid Gmail or Password!\n");
+    }
+}
