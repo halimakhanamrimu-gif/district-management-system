@@ -364,3 +364,159 @@ void updateMyInformation(void)
     }
 }
 
+
+/* ================================================
+   DELETE MY INFORMATION
+   ================================================ */
+
+void deleteMyInformation(void)
+{
+    char gmail[100], password[100], confirm[8];
+    struct User user;
+    FILE *file, *tempFile;
+    int found = 0;
+
+    printf("\n+======================================================+\n");
+    printf("|              DELETE MY INFORMATION                   |\n");
+    printf("+======================================================+\n");
+
+    inputString(gmail,    sizeof(gmail),    "Enter your Gmail    : ");
+    inputString(password, sizeof(password), "Enter your Password : ");
+
+    file = fopen(USER_FILE, "r");
+    if (!file) { printf("\nNo user information found.\n"); return; }
+
+    tempFile = fopen(TEMP_FILE, "w");
+    if (!tempFile) { fclose(file); printf("\nTemp file error!\n"); return; }
+
+    while (fscanf(file,
+                  "%99[^|]|%99[^|]|%99[^|]|%149[^|]|%19[^|]|%19[^|]|%d|%19[^\n]\n",
+                  user.name, user.gmail, user.password,
+                  user.address, user.phone, user.nid,
+                  &user.age, user.gender) == 8)
+    {
+        if (strcmp(gmail, user.gmail) == 0 && strcmp(password, user.password) == 0)
+        {
+            found = 1;
+            continue;
+        }
+
+        fprintf(tempFile, "%s|%s|%s|%s|%s|%s|%d|%s\n",
+                user.name, user.gmail, user.password,
+                user.address, user.phone, user.nid,
+                user.age, user.gender);
+    }
+
+    fclose(file);
+    fclose(tempFile);
+
+    if (!found)
+    {
+        remove(TEMP_FILE);
+        printf("\n+======================================================+\n");
+        printf("|       INVALID GMAIL OR PASSWORD! ACCESS DENIED       |\n");
+        printf("+======================================================+\n");
+        return;
+    }
+
+    inputString(confirm, sizeof(confirm),
+                "\nAre you sure? Enter Y to confirm / N to cancel: ");
+
+    if (confirm[0] == 'Y' || confirm[0] == 'y')
+    {
+        remove(USER_FILE);
+        rename(TEMP_FILE, USER_FILE);
+        printf("\n+======================================================+\n");
+        printf("|      YOUR INFORMATION DELETED SUCCESSFULLY!          |\n");
+        printf("+======================================================+\n");
+    }
+    else
+    {
+        remove(TEMP_FILE);
+        printf("\nDelete operation cancelled.\n");
+    }
+}
+
+
+/* ================================================
+   BOOK A DOCTOR
+   ================================================ */
+
+void bookDoctor(void)
+{
+    char gmail[100], password[100];
+    struct User user;
+    struct Booking booking;
+    FILE *file;
+    int hChoice, dChoice, i;
+
+    printf("\n+======================================================+\n");
+    printf("|                   BOOK A DOCTOR                      |\n");
+    printf("+======================================================+\n");
+
+    inputString(gmail,    sizeof(gmail),    "Enter your Gmail    : ");
+    inputString(password, sizeof(password), "Enter your Password : ");
+
+    if (!findUser(gmail, password, &user))
+    {
+        printf("\nInvalid Gmail or Password! Access Denied.\n");
+        return;
+    }
+
+    printf("\nWelcome, %s!\n", user.name);
+    printf("NID on file: %s\n", user.nid);
+
+    printf("\n+------------------------------------------------------+\n");
+    printf("|                  SELECT HOSPITAL                     |\n");
+    printf("+------------------------------------------------------+\n");
+    for (i = 0; i < HOSPITAL_COUNT; i++)
+        printf("|  %d. %-48s|\n", i + 1, hospitals[i]);
+    printf("+------------------------------------------------------+\n");
+
+    hChoice = readInt("Enter Hospital Choice (1-4): ", 1, HOSPITAL_COUNT);
+
+    strncpy(booking.hospitalName, hospitals[hChoice - 1], sizeof(booking.hospitalName) - 1);
+    booking.hospitalName[sizeof(booking.hospitalName) - 1] = '\0';
+
+    printf("\n+------------------------------------------------------+\n");
+    printf("|              AVAILABLE DOCTORS                       |\n");
+    printf("+------------------------------------------------------+\n");
+    for (i = 0; i < MAX_DOCTORS; i++)
+        printf("|  %d. %-48s|\n", i + 1, doctors[hChoice - 1][i]);
+    printf("+------------------------------------------------------+\n");
+
+    dChoice = readInt("Enter Doctor Choice (1-5): ", 1, MAX_DOCTORS);
+
+    strncpy(booking.doctorName, doctors[hChoice - 1][dChoice - 1], sizeof(booking.doctorName) - 1);
+    booking.doctorName[sizeof(booking.doctorName) - 1] = '\0';
+
+    inputString(booking.bookingDate, sizeof(booking.bookingDate),
+                "Enter Booking Date (DD/MM/YYYY): ");
+
+    strncpy(booking.userGmail, gmail, sizeof(booking.userGmail) - 1);
+    booking.userGmail[sizeof(booking.userGmail) - 1] = '\0';
+
+    strncpy(booking.userNID, user.nid, sizeof(booking.userNID) - 1);
+    booking.userNID[sizeof(booking.userNID) - 1] = '\0';
+
+    file = fopen(BOOKING_FILE, "a");
+    if (!file) { printf("\nError: Cannot save booking!\n"); return; }
+
+    fprintf(file, "%s|%s|%s|%s|%s\n",
+            booking.userGmail, booking.userNID,
+            booking.hospitalName, booking.doctorName,
+            booking.bookingDate);
+
+    fclose(file);
+
+    printf("\n+======================================================+\n");
+    printf("|           BOOKING CONFIRMED SUCCESSFULLY!            |\n");
+    printf("+======================================================+\n");
+    printf("  Patient  : %s\n", user.name);
+    printf("  NID      : %s\n", user.nid);
+    printf("  Hospital : %s\n", booking.hospitalName);
+    printf("  Doctor   : %s\n", booking.doctorName);
+    printf("  Date     : %s\n", booking.bookingDate);
+    printf("+------------------------------------------------------+\n");
+}
+
