@@ -683,3 +683,65 @@ void buyerPanel(void)
         }
     }
 }
+
+/* ================================================
+   MALL OWNER PANEL
+   ================================================ */
+
+void mallOwner(void)
+{
+    int choice;
+
+    while (1)
+    {
+        printf("\n+======================================================+\n");
+        printf("|             SHOPPING MALL OWNER PANEL                |\n");
+        printf("+======================================================+\n");
+        printf("|  1. Add Shopping Mall                                |\n");
+        printf("|  2. View Shopping Malls                              |\n");
+        printf("|  3. Update Shopping Mall                             |\n");
+        printf("|  4. Delete Shopping Mall                             |\n");
+        printf("|  5. Back                                             |\n");
+        printf("+------------------------------------------------------+\n");
+
+        choice = readInt("Enter Choice: ", 1, 5);
+
+        switch (choice)
+        {
+            case 1: addMall();    break;
+            case 2: viewMall();   break;
+            case 3: updateMall(); break;
+            case 4: deleteMall(); break;
+            case 5: return;
+        }
+    }
+}
+
+/* ================================================
+   MALL MENU
+   ================================================ */
+
+void mallMenu(void)
+{
+    int choice;
+
+    while (1)
+    {
+        printf("\n+======================================================+\n");
+        printf("|                SHOPPING MALL MENU                    |\n");
+        printf("+======================================================+\n");
+        printf("|  1. Mall Owner Panel                                 |\n");
+        printf("|  2. Buyer Panel                                      |\n");
+        printf("|  3. Back to Main Menu                                |\n");
+        printf("+------------------------------------------------------+\n");
+
+        choice = readInt("Enter Choice: ", 1, 3);
+
+        switch (choice)
+        {
+            case 1: mallOwner();  break;
+            case 2: buyerPanel(); break;
+            case 3: return;
+        }
+    }
+}
